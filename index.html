@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSR Showcase</title>
+    <title>HSR Character Stats</title>
     <style>
         :root {
             --primary-color: #6a5acd;
@@ -58,65 +58,6 @@
             background-color: #ff6347;
         }
 
-        .player-profile {
-            max-width: 1000px;
-            margin: 2rem auto;
-            background-color: var(--background-light);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .profile-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .profile-info h2 {
-            margin: 0;
-            color: var(--accent-color);
-        }
-
-        .signature {
-            font-style: italic;
-            color: var(--secondary-color);
-            margin-top: 0.5rem;
-        }
-
-        .profile-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
-        .stat-card {
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 1rem;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--secondary-color);
-        }
-
-        .stat-card p {
-            margin: 0.5rem 0 0;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
         .character-showcase {
             max-width: 1000px;
             margin: 2rem auto;
@@ -140,6 +81,7 @@
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s;
+            padding: 1rem;
         }
 
         .character-card:hover {
@@ -147,32 +89,18 @@
         }
 
         .character-header {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            background: linear-gradient(90deg, rgba(106,90,205,0.3) 0%, rgba(147,112,219,0.1) 100%);
-        }
-
-        .character-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 1rem;
+            margin-bottom: 1rem;
         }
 
         .character-name {
             font-weight: bold;
             font-size: 1.2rem;
+            color: var(--accent-color);
         }
 
         .character-level {
             color: var(--secondary-color);
             font-size: 0.9rem;
-        }
-
-        .character-content {
-            padding: 1rem;
         }
 
         .character-stats {
@@ -191,52 +119,8 @@
             color: var(--secondary-color);
         }
 
-        .light-cone {
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-        }
-
-        .light-cone-name {
+        .stat-value {
             font-weight: bold;
-            margin-bottom: 0.25rem;
-        }
-
-        .light-cone-level {
-            font-size: 0.9rem;
-            color: var(--secondary-color);
-        }
-
-        .relics {
-            margin-top: 1rem;
-        }
-
-        .relic {
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-        }
-
-        .relic-name {
-            font-weight: bold;
-            margin-bottom: 0.25rem;
-        }
-
-        .relic-main-stat {
-            color: var(--accent-color);
-            font-size: 0.9rem;
-        }
-
-        .relic-sub-stats {
-            margin-top: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .relic-sub-stat {
-            display: flex;
-            justify-content: space-between;
         }
 
         footer {
@@ -259,10 +143,6 @@
         }
 
         @media (max-width: 768px) {
-            .profile-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
             .character-grid {
                 grid-template-columns: 1fr;
             }
@@ -271,7 +151,7 @@
 </head>
 <body>
     <header>
-        <h1>Honkai: Star Rail Character Showcase</h1>
+        <h1>Honkai: Star Rail Character Stats</h1>
         <div class="search-bar">
             <input type="text" id="uid-input" placeholder="Enter UID" value="800277338">
             <button id="search-btn">Search</button>
@@ -296,6 +176,18 @@
             1406: "Cipher",
             1407: "Castorice",
             1409: "Hyacine",
+            1310: "Firefly"
+        };
+
+        // Base stats for characters at level 80 (approximate - you may need to adjust these)
+        const baseStats = {
+            1212: { // Jingliu
+                hp: 1267,
+                atk: 698,
+                def: 485,
+                spd: 96
+            }
+            // Add base stats for other characters as needed
         };
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -343,7 +235,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    renderProfile(data);
+                    renderCharacters(data);
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
@@ -360,49 +252,17 @@
                 });
             }
             
-            function renderProfile(data) {
+            function renderCharacters(data) {
                 if (!data || !data.detailInfo) {
-                    content.innerHTML = '<div class="error">No profile data found for this UID</div>';
+                    content.innerHTML = '<div class="error">No character data found for this UID</div>';
                     return;
                 }
                 
                 const profile = data.detailInfo;
-                const recordInfo = profile.recordInfo || {};
                 
-                // Render player profile
                 let html = `
-                    <section class="player-profile">
-                        <div class="profile-header">
-                            <img src="https://enka.network/ui/hsr/SpriteOutput/AvatarRoundIcon/AvatarSkin/1131001.png" alt="Profile Icon" class="profile-icon">
-                            <div class="profile-info">
-                                <h2>${profile.nickname || 'Unknown'}</h2>
-                                <p>UID: ${profile.uid} | Level ${profile.level} | World Level ${profile.worldLevel || 'N/A'}</p>
-                                ${profile.signature ? `<p class="signature">"${profile.signature}"</p>` : ''}
-                            </div>
-                        </div>
-                        
-                        <div class="profile-stats">
-                            <div class="stat-card">
-                                <h3>Achievements</h3>
-                                <p>${recordInfo.achievementCount || 'N/A'}</p>
-                            </div>
-                            <div class="stat-card">
-                                <h3>Characters</h3>
-                                <p>${recordInfo.avatarCount || 'N/A'}</p>
-                            </div>
-                            <div class="stat-card">
-                                <h3>Light Cones</h3>
-                                <p>${recordInfo.equipmentCount || 'N/A'}</p>
-                            </div>
-                            <div class="stat-card">
-                                <h3>Relics</h3>
-                                <p>${recordInfo.relicCount || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </section>
-                    
                     <section class="character-showcase">
-                        <h2>Character Showcase</h2>
+                        <h2>Character Stats</h2>
                         <div class="character-grid" id="character-grid">
                             <!-- Characters will be inserted here -->
                         </div>
@@ -419,7 +279,7 @@
                         characterGrid.appendChild(createCharacterCard(character));
                     });
                 } else {
-                    characterGrid.innerHTML = '<p>No characters found in showcase</p>';
+                    characterGrid.innerHTML = '<p>No characters found</p>';
                 }
             }
             
@@ -430,175 +290,117 @@
                 // Get character name from mapping
                 const characterName = characterNames[character.avatarId] || `Character ${character.avatarId}`;
                 
-                // Equipment (Light Cone)
-                let lightConeHtml = '<div class="light-cone"><p class="light-cone-name">No Light Cone</p></div>';
-                if (character.equipment && character.equipment.tid) {
-                    lightConeHtml = `
-                        <div class="light-cone">
-                            <p class="light-cone-name">Light Cone ${character.equipment.tid}</p>
-                            <p class="light-cone-level">Lv. ${character.equipment.level || '0'}</p>
-                        </div>
-                    `;
-                }
-                
-                // Relics
-                let relicsHtml = '';
-                if (character.relicList && character.relicList.length > 0) {
-                    relicsHtml = '<div class="relics"><h4>Relics</h4>';
-                    
-                    character.relicList.forEach(relic => {
-                        // Get relic type name
-                        const relicTypes = ['Head', 'Hands', 'Body', 'Feet', 'Planar Sphere', 'Link Rope'];
-                        const relicType = relicTypes[relic.type - 1] || `Relic ${relic.type}`;
-                        
-                        // Main stat
-                        let mainStat = 'Unknown';
-                        if (relic.mainAffixId === 1) mainStat = 'HP';
-                        else if (relic.mainAffixId === 2) mainStat = 'ATK';
-                        else if (relic.mainAffixId === 3) mainStat = 'DEF';
-                        else if (relic.mainAffixId === 4) mainStat = 'SPD';
-                        else if (relic.mainAffixId === 5) mainStat = 'CRIT DMG';
-                        else if (relic.mainAffixId === 6) mainStat = 'Elemental DMG';
-                        else if (relic.mainAffixId === 7) mainStat = 'Effect Hit Rate';
-                        
-                        // Sub stats
-                        let subStatsHtml = '';
-                        if (relic._flat && relic._flat.props) {
-                            relic._flat.props.forEach(prop => {
-                                if (prop.type !== 'HPDelta' && prop.type !== 'AttackDelta' && prop.type !== 'DefenceDelta') {
-                                    subStatsHtml += `
-                                        <div class="relic-sub-stat">
-                                            <span class="stat-label">${formatStatName(prop.type)}</span>
-                                            <span>${formatStatValue(prop.value, prop.type)}</span>
-                                        </div>
-                                    `;
-                                }
-                            });
-                        }
-                        
-                        relicsHtml += `
-                            <div class="relic">
-                                <p class="relic-name">${relicType} +${relic.level || '0'}</p>
-                                <p class="relic-main-stat">Main: ${mainStat}</p>
-                                <div class="relic-sub-stats">
-                                    ${subStatsHtml}
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    relicsHtml += '</div>';
-                }
-                
-                // Skills
-                let skillsHtml = '';
-                if (character.skillTreeList && character.skillTreeList.length > 0) {
-                    skillsHtml = '<div class="skills"><h4>Skills</h4>';
-                    
-                    // Group skills by type (basic, skill, ult, talent)
-                    const basicSkill = character.skillTreeList.find(s => s.pointId.toString().endsWith('01'));
-                    const skill = character.skillTreeList.find(s => s.pointId.toString().endsWith('02'));
-                    const ult = character.skillTreeList.find(s => s.pointId.toString().endsWith('03'));
-                    const talent = character.skillTreeList.find(s => s.pointId.toString().endsWith('04'));
-                    
-                    if (basicSkill) skillsHtml += `<p>Basic: Lv. ${basicSkill.level}</p>`;
-                    if (skill) skillsHtml += `<p>Skill: Lv. ${skill.level}</p>`;
-                    if (ult) skillsHtml += `<p>Ultimate: Lv. ${ult.level}</p>`;
-                    if (talent) skillsHtml += `<p>Talent: Lv. ${talent.level}</p>`;
-                    
-                    skillsHtml += '</div>';
-                }
+                // Calculate total stats
+                const stats = calculateTotalStats(character);
                 
                 card.innerHTML = `
                     <div class="character-header">
-                        <img src="https://enka.network/ui/hsr/SpriteOutput/AvatarRoundIcon/AvatarSkin/${character.avatarId}.png" alt="${characterName}" class="character-icon" onerror="this.src='https://enka.network/ui/UI_AvatarIcon_PlayerGirl.png'">
-                        <div>
-                            <div class="character-name">${characterName}</div>
-                            <div class="character-level">Lv. ${character.level}/${character.promotion * 20 + 10}</div>
-                        </div>
+                        <div class="character-name">${characterName}</div>
+                        <div class="character-level">Lv. ${character.level}}</div>
                     </div>
                     
-                    <div class="character-content">
-                        ${lightConeHtml}
-                        
-                        <div class="character-stats">
-                            <div class="stat-item">
-                                <span class="stat-label">HP</span>
-                                <span>${getStatValue(character, 'HPDelta')}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">ATK</span>
-                                <span>${getStatValue(character, 'AttackDelta')}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">DEF</span>
-                                <span>${getStatValue(character, 'DefenceDelta')}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">SPD</span>
-                                <span>${getStatValue(character, 'SpeedDelta')}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">CRIT Rate</span>
-                                <span>${getStatValue(character, 'CriticalChance')}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">CRIT DMG</span>
-                                <span>${getStatValue(character, 'CriticalDamage')}</span>
-                            </div>
+                    <div class="character-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">HP</span>
+                            <span class="stat-value">${stats.hp.toFixed(0)}</span>
                         </div>
-                        
-                        ${skillsHtml}
-                        ${relicsHtml}
+                        <div class="stat-item">
+                            <span class="stat-label">ATK</span>
+                            <span class="stat-value">${stats.atk.toFixed(0)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">DEF</span>
+                            <span class="stat-value">${stats.def.toFixed(0)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">SPD</span>
+                            <span class="stat-value">${stats.spd.toFixed(0)}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">CRIT Rate</span>
+                            <span class="stat-value">${(stats.critRate * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">CRIT DMG</span>
+                            <span class="stat-value">${(stats.critDmg * 100).toFixed(1)}%</span>
+                        </div>
                     </div>
                 `;
                 
                 return card;
             }
             
-            function getStatValue(character, statType) {
-                if (!character.relicList) return 'N/A';
-                
-                let total = 0;
-                character.relicList.forEach(relic => {
-                    if (relic._flat && relic._flat.props) {
-                        const prop = relic._flat.props.find(p => p.type === statType);
-                        if (prop) {
-                            total += prop.value;
-                        }
-                    }
-                });
-                
-                if (total === 0) return 'N/A';
-                
-                // Format the value based on stat type
-                return formatStatValue(total, statType);
-            }
-            
-            function formatStatValue(value, statType) {
-                if (statType.includes('AddedRatio') || statType.includes('Probability') || 
-                    statType.includes('Critical') || statType.includes('Resistance')) {
-                    return (value * 100).toFixed(1) + '%';
-                } else if (statType.includes('Delta')) {
-                    return Math.round(value);
-                }
-                return value;
-            }
-            
-            function formatStatName(statType) {
-                const statNames = {
-                    'HPAddedRatio': 'HP%',
-                    'AttackAddedRatio': 'ATK%',
-                    'DefenceAddedRatio': 'DEF%',
-                    'SpeedDelta': 'SPD',
-                    'CriticalChance': 'CRIT Rate',
-                    'CriticalDamage': 'CRIT DMG',
-                    'StatusProbability': 'Effect Hit Rate',
-                    'StatusResistance': 'Effect RES',
-                    'BreakDamageAddedRatio': 'Break Effect'
+            function calculateTotalStats(character) {
+                // Get base stats (you'll need to provide these for each character)
+                const base = baseStats[character.avatarId] || {
+                    hp: 1000,
+                    atk: 500,
+                    def: 400,
+                    spd: 100
                 };
                 
-                return statNames[statType] || statType;
+                // Initialize totals with base stats
+                const totals = {
+                    hp: base.hp,
+                    atk: base.atk,
+                    def: base.def,
+                    spd: base.spd,
+                    critRate: 0.05, // Base 5% crit rate
+                    critDmg: 0.50  // Base 50% crit damage
+                };
+                
+                // Add stats from light cone if equipped
+                if (character.equipment && character.equipment._flat && character.equipment._flat.props) {
+                    character.equipment._flat.props.forEach(prop => {
+                        addStatToTotal(totals, prop.type, prop.value);
+                    });
+                }
+                
+                // Add stats from relics
+                if (character.relicList) {
+                    character.relicList.forEach(relic => {
+                        if (relic._flat && relic._flat.props) {
+                            relic._flat.props.forEach(prop => {
+                                addStatToTotal(totals, prop.type, prop.value);
+                            });
+                        }
+                    });
+                }
+                
+                return totals;
+            }
+            
+            function addStatToTotal(totals, statType, value) {
+                switch(statType) {
+                    case 'HPDelta':
+                        totals.hp += value;
+                        break;
+                    case 'HPAddedRatio':
+                        totals.hp *= (1 + value);
+                        break;
+                    case 'AttackDelta':
+                        totals.atk += value;
+                        break;
+                    case 'AttackAddedRatio':
+                        totals.atk *= (1 + value);
+                        break;
+                    case 'DefenceDelta':
+                        totals.def += value;
+                        break;
+                    case 'DefenceAddedRatio':
+                        totals.def *= (1 + value);
+                        break;
+                    case 'SpeedDelta':
+                        totals.spd += value;
+                        break;
+                    case 'CriticalChance':
+                        totals.critRate += value;
+                        break;
+                    case 'CriticalDamage':
+                        totals.critDmg += value;
+                        break;
+                    // Add other stat types as needed
+                }
             }
         });
     </script>
