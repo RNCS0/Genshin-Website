@@ -3,79 +3,336 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Genshin Profile</title>
+    <title>My Honkai: Star Rail Profile</title>
     <style>
-        /* Keep your existing styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f1a;
+            color: #e0e0e0;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .profile-header {
+            background-color: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3a3a5e;
+        }
+        
+        .profile-info {
+            flex-grow: 1;
+        }
+        
+        .profile-name {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.5rem;
+        }
+        
+        .profile-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .meta-item {
+            background-color: #2a2a4a;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .character-card {
+            background-color: #1a1a2e;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .character-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .character-image-container {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .character-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .character-card:hover .character-image {
+            transform: scale(1.05);
+        }
+        
+        .character-element {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .character-element img {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .character-details {
+            padding: 15px;
+        }
+        
+        .character-name {
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            color: #ffffff;
+        }
+        
+        .character-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 600px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-meta {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .characters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="profile-card">
-        <h1 class="profile-title">My Genshin Profile</h1>
-        <div id="loading" class="loading">Loading profile data...</div>
-        <div id="profile-data" style="display: none;">
-            <div class="profile-info">Adventure Rank: <span id="ar-level"></span></div>
-            <div class="profile-info">World Level: <span id="world-level"></span></div>
+    <div class="profile-header" id="profile-header" style="display: none;">
+        <img class="profile-avatar" id="profile-avatar" src="" alt="Profile Avatar">
+        <div class="profile-info">
+            <h1 class="profile-name" id="player-name">Trailblazer</h1>
+            <div class="profile-meta">
+                <div class="meta-item">Level: <span id="player-level">0</span></div>
+                <div class="meta-item">UID: <span id="player-uid">809344620</span></div>
+                <div class="meta-item">World: <span id="world-level">0</span></div>
+            </div>
         </div>
-        <div id="error-message" class="error" style="display: none;"></div>
-        <div class="uid">UID: 809344620</div>
+    </div>
+    
+    <div id="loading" class="loading">
+        Loading profile data...
+    </div>
+    
+    <div id="error-message" class="error" style="display: none;">
+    </div>
+    
+    <h2 style="margin: 30px 0 20px;">My Characters</h2>
+    
+    <div id="characters-container" class="characters-grid">
+        <!-- Characters will be inserted here by JavaScript -->
     </div>
 
     <script>
-        const GENSHIN_UID = "809344620";
+        // Configuration
+        const HSR_UID = "800277338"; // Replace with your UID
+        const PROXY_URL = "https://api.allorigins.win/raw?url=";
+        const API_URL = `https://enka.network/api/hsr/uid/${HSR_UID}/`;
         
-        async function fetchProfileData() {
-            try {
-                // Using a more reliable proxy
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const targetUrl = `https://enka.network/api/uid/${GENSHIN_UID}/`;
-                
-                const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-                
-                if (!response.ok) throw new Error(`Server returned ${response.status}`);
-                return await response.json();
-            } catch (error) {
-                console.error("Fetch error:", error);
-                throw new Error("Couldn't connect to game servers. Try again later.");
-            }
-        }
+        // Element data
+        const ELEMENTS = {
+            Physical: { icon: "https://enka.network/ui/hsr/element/Physical.png", color: "#dddddd" },
+            Fire: { icon: "https://enka.network/ui/hsr/element/Fire.png", color: "#ff6b6b" },
+            Ice: { icon: "https://enka.network/ui/hsr/element/Ice.png", color: "#6bc5ff" },
+            Lightning: { icon: "https://enka.network/ui/hsr/element/Lightning.png", color: "#d28fff" },
+            Wind: { icon: "https://enka.network/ui/hsr/element/Wind.png", color: "#74ffc0" },
+            Quantum: { icon: "https://enka.network/ui/hsr/element/Quantum.png", color: "#b28dff" },
+            Imaginary: { icon: "https://enka.network/ui/hsr/element/Imaginary.png", color: "#ffd166" }
+        };
         
-        function displayProfile(data) {
-            if (data?.playerInfo) {
-                document.getElementById('ar-level').textContent = data.playerInfo.level || "N/A";
-                document.getElementById('world-level').textContent = data.playerInfo.worldLevel || "N/A";
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('profile-data').style.display = 'block';
-            } else {
-                throw new Error("Profile not found. Is your UID correct and profile public?");
-            }
-        }
+        // Path data
+        const PATHS = {
+            Destruction: "https://enka.network/ui/hsr/path/Destruction.png",
+            Hunt: "https://enka.network/ui/hsr/path/Hunt.png",
+            Erudition: "https://enka.network/ui/hsr/path/Erudition.png",
+            Harmony: "https://enka.network/ui/hsr/path/Harmony.png",
+            Nihility: "https://enka.network/ui/hsr/path/Nihility.png",
+            Preservation: "https://enka.network/ui/hsr/path/Preservation.png",
+            Abundance: "https://enka.network/ui/hsr/path/Abundance.png"
+        };
         
+        // Character data mapping (add more as needed)
+        const CHARACTER_DATA = {
+            1001: { name: "March 7th", element: "Ice", path: "Preservation" },
+            1002: { name: "Dan Heng", element: "Wind", path: "Hunt" },
+            1003: { name: "Himeko", element: "Fire", path: "Erudition" },
+            1004: { name: "Welt", element: "Imaginary", path: "Nihility" },
+            1005: { name: "Kafka", element: "Lightning", path: "Nihility" },
+            8001: { name: "Stelle", element: "Physical", path: "Destruction" },
+            8002: { name: "Caelus", element: "Physical", path: "Destruction" }
+        };
+
+        // Main function to load profile data
         async function loadProfile() {
             try {
-                const data = await fetchProfileData();
-                displayProfile(data);
+                const response = await fetch(PROXY_URL + encodeURIComponent(API_URL));
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status} status`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.playerInfo || !data.characters) {
+                    throw new Error("Profile data not available. Make sure your profile is public in-game.");
+                }
+                
+                displayProfile(data.playerInfo);
+                displayCharacters(data.characters);
+                
             } catch (error) {
-                document.getElementById('loading').style.display = 'none';
-                const errorEl = document.getElementById('error-message');
-                errorEl.style.display = 'block';
-                errorEl.textContent = error.message;
+                console.error("Error loading profile:", error);
+                showError(error.message);
                 
                 // Show cached data if available
-                if (localStorage.getItem('lastProfile')) {
-                    displayProfile(JSON.parse(localStorage.getItem('lastProfile')));
-                    errorEl.textContent += " (showing cached data)";
+                if (localStorage.getItem('lastHSRProfile')) {
+                    const cachedData = JSON.parse(localStorage.getItem('lastHSRProfile'));
+                    displayProfile(cachedData.playerInfo);
+                    displayCharacters(cachedData.characters);
+                    document.getElementById('error-message').textContent += " (showing cached data)";
                 }
             }
         }
         
-        // Load when page opens
-        window.addEventListener('DOMContentLoaded', loadProfile);
-        
-        // Save data to cache when successful
-        function displayProfile(data) {
-            // ... existing display code ...
-            localStorage.setItem('lastProfile', JSON.stringify(data));
+        // Display profile info
+        function displayProfile(playerInfo) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('profile-header').style.display = 'flex';
+            
+            document.getElementById('player-name').textContent = playerInfo.nickname || "Trailblazer";
+            document.getElementById('player-level').textContent = playerInfo.level || "0";
+            document.getElementById('world-level').textContent = playerInfo.worldLevel || "0";
+            document.getElementById('player-uid').textContent = HSR_UID;
+            
+            // Set avatar if available
+            if (playerInfo.avatar && playerInfo.avatar.id) {
+                document.getElementById('profile-avatar').src = 
+                    `https://enka.network/ui/hsr/icon/avatar/${playerInfo.avatar.id}.png`;
+            }
         }
+        
+        // Display characters
+        function displayCharacters(characters) {
+            const container = document.getElementById('characters-container');
+            container.innerHTML = ''; // Clear loading
+            
+            characters.forEach(character => {
+                const charData = CHARACTER_DATA[character.id] || { 
+                    name: `Character ${character.id}`,
+                    element: "Physical",
+                    path: "Destruction"
+                };
+                
+                const element = ELEMENTS[charData.element] || ELEMENTS.Physical;
+                const pathIcon = PATHS[charData.path] || PATHS.Destruction;
+                
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.innerHTML = `
+                    <div class="character-image-container">
+                        <img class="character-image" 
+                             src="https://enka.network/ui/hsr/character/${character.id}.png" 
+                             alt="${charData.name}"
+                             onerror="this.src='https://enka.network/ui/unknown.png'">
+                        <div class="character-element" style="background-color: ${element.color}20; border: 1px solid ${element.color}">
+                            <img src="${element.icon}" alt="${charData.element}">
+                        </div>
+                    </div>
+                    <div class="character-details">
+                        <h3 class="character-name">${charData.name}</h3>
+                        <div class="character-stats">
+                            <span>Lv. ${character.level || '0'}</span>
+                            <span>E${character.eidolon || '0'}</span>
+                        </div>
+                        <img src="${pathIcon}" alt="${charData.path}" style="height: 20px; margin-top: 5px;">
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // Save data to cache
+            localStorage.setItem('lastHSRProfile', JSON.stringify({
+                playerInfo: {
+                    nickname: document.getElementById('player-name').textContent,
+                    level: document.getElementById('player-level').textContent,
+                    worldLevel: document.getElementById('world-level').textContent,
+                    avatar: { id: character.id }
+                },
+                characters: characters
+            }));
+        }
+        
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            const errorEl = document.getElementById('error-message');
+            errorEl.style.display = 'block';
+            errorEl.textContent = message;
+        }
+        
+        // Load data when page opens
+        window.addEventListener('DOMContentLoaded', loadProfile);
     </script>
 </body>
 </html>
