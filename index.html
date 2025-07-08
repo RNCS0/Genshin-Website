@@ -3,44 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Genshin Impact Profile</title>
+    <title>My Genshin Profile</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .profile-card {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            text-align: center;
-            width: 300px;
-        }
-        .profile-title {
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        .profile-info {
-            margin: 15px 0;
-            font-size: 18px;
-        }
-        .loading {
-            color: #666;
-        }
-        .error {
-            color: #e74c3c;
-        }
-        .uid {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-top: 20px;
-        }
+        /* Keep your existing styles */
     </style>
 </head>
 <body>
@@ -56,63 +21,61 @@
     </div>
 
     <script>
-        // Your UID - change if needed
         const GENSHIN_UID = "809344620";
         
-        // Using a CORS proxy to avoid issues on GitHub Pages
         async function fetchProfileData() {
             try {
-                // Using a public CORS proxy (for demo purposes only)
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                // Using a more reliable proxy
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
                 const targetUrl = `https://enka.network/api/uid/${GENSHIN_UID}/`;
                 
-                const response = await fetch(proxyUrl + targetUrl, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
+                const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
                 
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch data: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                return data;
-                
+                if (!response.ok) throw new Error(`Server returned ${response.status}`);
+                return await response.json();
             } catch (error) {
-                console.error("Error:", error);
-                throw error;
+                console.error("Fetch error:", error);
+                throw new Error("Couldn't connect to game servers. Try again later.");
             }
         }
         
-        // Display the profile data
         function displayProfile(data) {
-            document.getElementById('loading').style.display = 'none';
-            
-            if (data.playerInfo) {
+            if (data?.playerInfo) {
                 document.getElementById('ar-level').textContent = data.playerInfo.level || "N/A";
                 document.getElementById('world-level').textContent = data.playerInfo.worldLevel || "N/A";
+                document.getElementById('loading').style.display = 'none';
                 document.getElementById('profile-data').style.display = 'block';
             } else {
-                throw new Error("Profile data not available. Make sure your profile is public in-game.");
+                throw new Error("Profile not found. Is your UID correct and profile public?");
             }
         }
         
-        // Main function to load and display data
         async function loadProfile() {
             try {
-                const profileData = await fetchProfileData();
-                displayProfile(profileData);
+                const data = await fetchProfileData();
+                displayProfile(data);
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('error-message').style.display = 'block';
-                document.getElementById('error-message').textContent = error.message;
+                const errorEl = document.getElementById('error-message');
+                errorEl.style.display = 'block';
+                errorEl.textContent = error.message;
+                
+                // Show cached data if available
+                if (localStorage.getItem('lastProfile')) {
+                    displayProfile(JSON.parse(localStorage.getItem('lastProfile')));
+                    errorEl.textContent += " (showing cached data)";
+                }
             }
         }
         
-        // Load the profile when page loads
+        // Load when page opens
         window.addEventListener('DOMContentLoaded', loadProfile);
+        
+        // Save data to cache when successful
+        function displayProfile(data) {
+            // ... existing display code ...
+            localStorage.setItem('lastProfile', JSON.stringify(data));
+        }
     </script>
 </body>
 </html>
