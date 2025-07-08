@@ -287,6 +287,17 @@
     </footer>
 
     <script>
+        // Character ID to name mapping (simplified)
+        const characterNames = {
+            1005: "Kafka",
+            1212: "Jingliu",
+            1307: "BlackSwan",
+            1403: "Tribbie",
+            1406: "Cipher",
+            1407: "Castorice",
+            1409: "Hyacine",
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             const searchBtn = document.getElementById('search-btn');
             const uidInput = document.getElementById('uid-input');
@@ -316,20 +327,37 @@
             function fetchData(uid) {
                 content.innerHTML = '<div class="loading">Loading data...</div>';
                 
-                fetch(`https://enka.network/api/hsr/uid/${uid}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        renderProfile(data);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching data:', error);
-                        content.innerHTML = `<div class="error">Failed to load data: ${error.message}</div>`;
-                    });
+                // Using CORS proxy to avoid CORS issues
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const targetUrl = `https://enka.network/api/hsr/uid/${uid}`;
+                
+                fetch(proxyUrl + targetUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    renderProfile(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    content.innerHTML = `
+                        <div class="error">
+                            Failed to load data: ${error.message}<br><br>
+                            <small>
+                                Note: If you see CORS errors, try:<br>
+                                1. Visiting <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">the CORS demo page</a> to request temporary access<br>
+                                2. Or host this page on a web server instead of opening locally
+                            </small>
+                        </div>
+                    `;
+                });
             }
             
             function renderProfile(data) {
@@ -345,7 +373,7 @@
                 let html = `
                     <section class="player-profile">
                         <div class="profile-header">
-                            <img src="https://enka.network/ui/UI_AvatarIcon_PlayerGirl.png" alt="Profile Icon" class="profile-icon">
+                            <img src="https://enka.network/ui/hsr/SpriteOutput/AvatarRoundIcon/AvatarSkin/1131001.png" alt="Profile Icon" class="profile-icon">
                             <div class="profile-info">
                                 <h2>${profile.nickname || 'Unknown'}</h2>
                                 <p>UID: ${profile.uid} | Level ${profile.level} | World Level ${profile.worldLevel || 'N/A'}</p>
@@ -399,8 +427,8 @@
                 const card = document.createElement('div');
                 card.className = 'character-card';
                 
-                // Get character name from avatarId (you would normally map this to actual names)
-                const characterName = `Character ${character.avatarId}`;
+                // Get character name from mapping
+                const characterName = characterNames[character.avatarId] || `Character ${character.avatarId}`;
                 
                 // Equipment (Light Cone)
                 let lightConeHtml = '<div class="light-cone"><p class="light-cone-name">No Light Cone</p></div>';
@@ -483,7 +511,7 @@
                 
                 card.innerHTML = `
                     <div class="character-header">
-                        <img src="https://enka.network/ui/UI_AvatarIcon_${character.avatarId}.png" alt="${characterName}" class="character-icon" onerror="this.src='https://enka.network/ui/UI_AvatarIcon_PlayerGirl.png'">
+                        <img src="https://enka.network/ui/hsr/SpriteOutput/AvatarRoundIcon/AvatarSkin/${character.avatarId}.png" alt="${characterName}" class="character-icon" onerror="this.src='https://enka.network/ui/UI_AvatarIcon_PlayerGirl.png'">
                         <div>
                             <div class="character-name">${characterName}</div>
                             <div class="character-level">Lv. ${character.level}/${character.promotion * 20 + 10}</div>
